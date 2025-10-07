@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veículos - Locadora Azure</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="text-center mb-4 text-success">Cadastro de Veículos</h1>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Formulário de Cadastro -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Marca</label>
+            <input type="text" name="marca" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Modelo</label>
+            <input type="text" name="modelo" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Ano</label>
+            <input type="number" name="ano" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Placa</label>
+            <input type="text" name="placa" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Preço (R$)</label>
+            <input type="number" step="0.01" name="preco" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Foto</label>
+            <input type="file" name="foto" accept="image/*" class="form-control">
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-success">Salvar Veículo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">🔍 Filtros</h5>
+        <form method="GET" class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Marca</label>
+            <input type="text" name="marca" class="form-control" value="{{ marca_filtro }}" placeholder="Filtrar por marca...">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Disponibilidade</label>
+            <select name="disponivel" class="form-select">
+              <option value="">Todos</option>
+              <option value="true" {% if disponivel_filtro == 'true' %}selected{% endif %}>Disponíveis</option>
+              <option value="false" {% if disponivel_filtro == 'false' %}selected{% endif %}>Indisponíveis</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-outline-primary me-2">Filtrar</button>
+            <a href="/veiculos" class="btn btn-outline-secondary">Limpar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de Veículos -->
+    <h2 class="text-secondary">Lista de Veículos</h2>
+    {% if veiculos %}
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered mt-3 align-middle">
+        <thead class="table-success">
+          <tr>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Ano</th>
+            <th>Placa</th>
+            <th>Preço</th>
+            <th>Disponível</th>
+            <th>Foto</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in veiculos %}
+          <tr>
+            <td>{{ v["Marca"] }}</td>
+            <td>{{ v["Modelo"] }}</td>
+            <td>{{ v["Ano"] }}</td>
+            <td><strong>{{ v["RowKey"] }}</strong></td>
+            <td>R$ {{ "%.2f"|format(v["Preco"]|float) }}</td>
+            <td>
+              {% if v["Disponivel"] %}
+                <span class="badge bg-success">Sim</span>
+              {% else %}
+                <span class="badge bg-danger">Não</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if v["FotoUrl"] %}
+                <img src="{{ v['FotoUrl'] }}" alt="Foto do veículo" width="80" class="rounded shadow-sm">
+              {% else %}
+                <span class="text-muted">sem imagem</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="/veiculos/editar/{{ v['RowKey'] }}" class="btn btn-outline-primary" title="Editar">
+                  ✏️
+                </a>
+                <a href="/veiculos/excluir/{{ v['RowKey'] }}" class="btn btn-outline-danger" 
+                   onclick="return confirm('Tem certeza que deseja excluir o veículo {{ v.Marca }} {{ v.Modelo }}?')" title="Excluir">
+                  🗑️
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="alert alert-info mt-3">
+        <p class="mb-0">Nenhum veículo cadastrado.</p>
+      </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-outline-secondary">Voltar ao Início</a>
+      <a href="/admin" class="btn btn-outline-primary">Painel Admin</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locações - Locadora Azure</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="text-center mb-4 text-info">Gerenciar Locações</h1>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+      role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Formulário de Nova Locação -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">➕ Nova Locação</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Cliente</label>
+            <select name="cliente" class="form-select" required>
+              <option value="">Selecione um cliente...</option>
+              {% for c in clientes %}
+              <option value="{{ c['Email'] }}">{{ c['Nome'] }} ({{ c['Email'] }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Veículo</label>
+            <select name="veiculo" class="form-select" required>
+              <option value="">Selecione um veículo...</option>
+              {% for v in veiculos %}
+              <option value="{{ v['RowKey'] }}">{{ v['Marca'] }} {{ v['Modelo'] }} - {{ v['RowKey'] }} - R$ {{ "%.2f"|format(v['Preco']|float) }}/dia</option>
+              {% endfor %}
+            </select>
+            <small class="form-text text-muted">Apenas veículos disponíveis são listados</small>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Data Início</label>
+            <input type="date" name="inicio" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Data Fim</label>
+            <input type="date" name="fim" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Valor Total (R$)</label>
+            <input type="number" step="0.01" name="valor" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-info">Registrar Locação</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de Locações -->
+    <h2 class="text-secondary">Locações Registradas</h2>
+
+    {% if locacoes %}
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered mt-3 align-middle">
+        <thead class="table-info">
+          <tr>
+            <th>Cliente</th>
+            <th>Veículo</th>
+            <th>Data Início</th>
+            <th>Data Fim</th>
+            <th>Valor (R$)</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in locacoes %}
+          <tr>
+            <td>
+              <strong>{{ l["ClienteInfo"]["Nome"] if l["ClienteInfo"] else l["Cliente"] }}</strong><br>
+              <small class="text-muted">{{ l["Cliente"] }}</small>
+            </td>
+            <td>
+              <strong>{{ l["VeiculoInfo"]["Marca"] if l["VeiculoInfo"] else "N/A" }} {{ l["VeiculoInfo"]["Modelo"] if
+                l["VeiculoInfo"] else "" }}</strong><br>
+              <small class="text-muted">Placa: {{ l["Veiculo"] }}</small>
+            </td>
+            <td>{{ l["DataInicio"] }}</td>
+            <td>{{ l["DataFim"] }}</td>
+            <td>R$ {{ "%.2f"|format(l["Valor"]|float) }}</td>
+            <td>
+              {% if l["Status"] == "Ativa" %}
+              <span class="badge bg-warning">Ativa</span>
+              {% elif l["Status"] == "Finalizada" %}
+              <span class="badge bg-success">Finalizada</span>
+              {% elif l["Status"] == "Cancelada" %}
+              <span class="badge bg-danger">Cancelada</span>
+              {% else %}
+              <span class="badge bg-secondary">N/A</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                {% if l["Status"] == "Ativa" %}
+                <a href="/locacoes/finalizar/{{ l['RowKey'] }}" class="btn btn-outline-success"
+                  onclick="return confirm('Finalizar locação do veículo {{ l.Veiculo }}?')" title="Finalizar">
+                  ✅
+                </a>
+                <a href="/locacoes/cancelar/{{ l['RowKey'] }}" class="btn btn-outline-danger"
+                  onclick="return confirm('Cancelar locação do veículo {{ l.Veiculo }}?')" title="Cancelar">
+                  ❌
+                </a>
+                {% else %}
+                <span class="text-muted small">Nenhuma ação</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-3">
+      <p class="mb-0">Nenhuma locação registrada.</p>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-outline-secondary">Voltar ao Início</a>
+      <a href="/admin" class="btn btn-outline-primary">Painel Admin</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

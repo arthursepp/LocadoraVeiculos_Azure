@@ -492,4 +492,12 @@ def editar_dados_pessoais():
     return render_template("editar_dados_pessoais.html", cliente=cliente, email_cliente=email_cliente)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Verifica se está rodando no Render
+    port = int(os.environ.get("PORT", 5000))
+    
+    if os.getenv("RENDER"):
+        # Produção no Render
+        app.run(host="0.0.0.0", port=port)
+    else:
+        # Desenvolvimento local
+        app.run(debug=True, host="0.0.0.0", port=port)
